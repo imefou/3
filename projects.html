@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Efou</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060606;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.14);
+    --ink: #F5F5F4;
+    --ink-soft: #9C9C9A;
+    --accent: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 96px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body.page-enter {
+    opacity: 1;
+  }
+
+  .queue-box {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    bottom: 148px;
+    max-width: calc(100% - 2rem);
+    width: 280px;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    padding: 0.85rem 1.1rem;
+    z-index: 10;
+    text-align: center;
+  }
+
+  .queue-line {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0.3rem 0;
+  }
+
+  .queue-line:first-child {
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .nowplaying {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    bottom: 18px;
+    max-width: calc(100% - 2rem);
+    width: 280px;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: stretch;
+    padding: 1rem 1.1rem;
+    gap: 1rem;
+    z-index: 10;
+  }
+
+  .nowplaying.hidden,
+  .queue-box.hidden {
+    display: none;
+  }
+
+  .np-close {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(13,13,13,0.95);
+    border: 1px solid var(--card-border);
+    color: var(--ink-soft);
+    font-size: 0.62rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .np-close:hover {
+    color: var(--ink);
+  }
+
+  #player-show-btn {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    color: var(--ink);
+    font-size: 1.05rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+  }
+
+  #player-show-btn.visible {
+    display: flex;
+  }
+
+  .np-vol-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .np-vol-vertical .vol-num {
+    font-size: 0.62rem;
+    color: var(--ink-soft);
+  }
+
+  .vol-bar-vertical {
+    width: 4px;
+    height: 72px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.14);
+    position: relative;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .vol-bar-vertical::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: 0;
+    bottom: 0;
+  }
+
+  .vol-bar-vertical .fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60%;
+    background: #fff;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .np-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .np-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .np-title .check {
+    color: #4FA9E8;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .np-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+  }
+
+  .np-controls button {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .np-controls button:hover,
+  .np-controls button:focus-visible {
+    color: var(--ink);
+  }
+
+  .np-controls button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .np-play {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent) !important;
+    color: var(--bg) !important;
+    font-size: 0.75rem;
+  }
+
+  .np-play:disabled {
+    background: var(--card) !important;
+    color: var(--ink-soft) !important;
+  }
+
+  .np-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .np-progress .np-time {
+    font-size: 0.64rem;
+    color: var(--ink-soft);
+    width: 28px;
+    flex-shrink: 0;
+  }
+
+  .np-progress .np-time.end { text-align: right; }
+
+  .np-progress .bar {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.14);
+    position: relative;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .np-progress .bar::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: -10px; bottom: -10px;
+  }
+
+  .np-progress .bar .fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: #fff;
+    border-radius: 2px;
+  }
+
+  .np-progress .bar .fill::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .np-progress .bar:hover .fill::after,
+  .np-progress .bar.scrubbing .fill::after {
+    opacity: 1;
+  }
+
+  @media (max-width: 420px) {
+    .queue-box, .nowplaying { width: calc(100% - 2rem); }
+
+    .queue-box {
+      bottom: 122px;
+      padding: 0.6rem 0.9rem;
+    }
+
+    .queue-line {
+      font-size: 0.7rem;
+      padding: 0.22rem 0;
+    }
+
+    .nowplaying {
+      bottom: 14px;
+      padding: 0.7rem 0.85rem;
+      gap: 0.7rem;
+      border-radius: 18px;
+    }
+
+    .np-vol-vertical {
+      gap: 0.3rem;
+    }
+
+    .np-vol-vertical .vol-num {
+      font-size: 0.56rem;
+    }
+
+    .vol-bar-vertical {
+      height: 52px;
+    }
+
+    .np-body {
+      gap: 0.4rem;
+    }
+
+    .np-title {
+      font-size: 0.78rem;
+    }
+
+    .np-controls {
+      gap: 0.85rem;
+    }
+
+    .np-play {
+      width: 26px;
+      height: 26px;
+      font-size: 0.62rem;
+    }
+
+    .np-progress {
+      gap: 0.35rem;
+    }
+
+    .np-progress .np-time {
+      font-size: 0.58rem;
+      width: 24px;
+    }
+
+    .np-close {
+      width: 19px;
+      height: 19px;
+      font-size: 0.56rem;
+    }
+
+    #player-show-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 0.9rem;
+      right: 14px;
+      bottom: 14px;
+    }
+  }
+
+  #logo-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  #logo-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(6px);
+    opacity: 0.55;
+  }
+
+  #logo-bg .dark-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 3.5rem 1.25rem 4rem;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 5px rgba(255,255,255,0.07), 0 0 20px rgba(255,255,255,0.25);
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+  }
+
+  .bio {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 34ch;
+    margin: 0 auto 1.25rem;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 2.5rem;
+    transition: background 0.15s ease, border-color 0.15s ease,
+                transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .back-btn:hover,
+  .back-btn:focus-visible {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(255,255,255,0.12);
+  }
+
+  .section-title {
+    text-align: left;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin: 0 0 0.8rem;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .category-tab {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .category-tab:hover {
+    border-color: rgba(255,255,255,0.4);
+  }
+
+  .category-tab.active {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.55);
+    color: var(--ink);
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: left;
+  }
+
+  @media (min-width: 560px) {
+    .projects-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .project-card {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.15s ease, border-color 0.15s ease,
+                transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .project-card:hover,
+  .project-card:focus-visible {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 10px 30px rgba(255,255,255,0.14), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .project-card .thumb-wrap {
+    position: relative;
+  }
+
+  .project-card .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    display: block;
+    background: linear-gradient(150deg, #2A2A2A, #0F0F0F);
+  }
+
+  .project-card .count-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--card-border);
+    color: var(--ink);
+    font-size: 0.68rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+  }
+
+  .project-card .content {
+    padding: 0.9rem 1rem 1.05rem;
+  }
+
+  .project-card .title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .project-card .desc {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    padding: 2rem 1rem;
+    border: 1px dashed var(--card-border);
+    border-radius: 16px;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1.25rem;
+  }
+
+  .lightbox.open {
+    display: flex;
+  }
+
+  .lightbox-inner {
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .lightbox-img-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    background: #0D0D0D;
+  }
+
+  .lightbox-img-wrap img {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    display: block;
+    background: #000;
+  }
+
+  .lightbox-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+  }
+
+  .lightbox-nav button {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--ink);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .lightbox-nav button:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .lightbox-count {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+
+  .lightbox-title {
+    margin-top: 0.9rem;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .lightbox-desc {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--ink);
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  footer {
+    margin-top: 3rem;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    opacity: 0.7;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div id="logo-bg" aria-hidden="true">
+    <img src="img/logo-bg.gif" alt="">
+    <div class="dark-overlay"></div>
+  </div>
+  <div class="wrap">
+    <div class="avatar">
+      <img src="img/avatar.jpg" alt="Efou">
+    </div>
+    <h1>Efou</h1>
+    <p class="bio">A collection of things I've made.</p>
+
+    <a class="back-btn" id="back-btn" href="index.html">← Back to home</a>
+
+    <p class="section-title">Projects</p>
+
+    <div class="category-tabs" id="category-tabs">
+      <button class="category-tab active" data-category="video">Video Editing</button>
+      <button class="category-tab" data-category="minecraft">Minecraft</button>
+    </div>
+
+    <div class="projects-grid" id="projects-grid">
+      <div class="empty-state">Loading projects…</div>
+    </div>
+
+    <footer>Efou © 2026</footer>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-img-wrap">
+        <img id="lightbox-img" src="" alt="">
+      </div>
+      <div class="lightbox-nav">
+        <button id="lightbox-prev" aria-label="Previous image">◀</button>
+        <span class="lightbox-count" id="lightbox-count"></span>
+        <button id="lightbox-next" aria-label="Next image">▶</button>
+      </div>
+      <div class="lightbox-title" id="lightbox-title"></div>
+      <div class="lightbox-desc" id="lightbox-desc"></div>
+    </div>
+  </div>
+
+  <div class="queue-box">
+    <div class="queue-line" id="queue-line-1">Up next: —</div>
+    <div class="queue-line" id="queue-line-2">Then: —</div>
+  </div>
+
+  <div class="nowplaying">
+    <button class="np-close" id="np-close" aria-label="Hide player">✕</button>
+    <div class="np-vol-vertical">
+      <span class="vol-num">100</span>
+      <div class="vol-bar-vertical" id="vol-bar">
+        <div class="fill" id="vol-fill"></div>
+      </div>
+      <span class="vol-num">0</span>
+    </div>
+
+    <div class="np-body">
+      <div class="np-title"><span id="np-title-text">Track Name</span> <span class="check">✓</span></div>
+
+      <div class="np-controls">
+        <button aria-label="Previous" id="np-prev">◀◀</button>
+        <button class="np-play" aria-label="Play">▶</button>
+        <button aria-label="Next" id="np-next">▶▶</button>
+      </div>
+
+      <div class="np-progress">
+        <span class="np-time">0:00</span>
+        <div class="bar" id="progress-bar"><div class="fill" style="width:0%"></div></div>
+        <span class="np-time end" id="np-duration">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <button id="player-show-btn" aria-label="Show player">♫</button>
+
+  <audio id="bg-audio" preload="none"></audio>
+  <script>
+    (function () {
+      const playlist = [
+        {
+          title: "Kneejerk Reflex",
+          artist: "Efou",
+          preview: "audio/track2.mp3"
+        },
+        {
+          title: "Shattered Glasshouse",
+          artist: "Efou",
+          preview: "audio/track3.mp3"
+        },
+        {
+          title: "Static Bloodrush",
+          artist: "Efou",
+          preview: "audio/track4.mp3"
+        }
+      ];
+
+      let currentIndex = 0;
+      const audio = document.getElementById('bg-audio');
+      const playBtn = document.querySelector('.np-play');
+      const prevBtn = document.getElementById('np-prev');
+      const nextBtn = document.getElementById('np-next');
+      const savedTime = parseFloat(localStorage.getItem('efou_music_time') || '0') || 0;
+      const savedPaused = localStorage.getItem('efou_music_paused') === '1';
+
+      function fmtTime(sec) {
+        if (!isFinite(sec) || sec < 0) sec = 0;
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+      }
+
+      function setPlayIcon(isPlaying) {
+        playBtn.textContent = isPlaying ? '❚❚' : '▶';
+      }
+
+      function renderQueue() {
+        const len = playlist.length;
+        const upNext = playlist[(currentIndex + 1) % len];
+        const thenNext = playlist[(currentIndex + 2) % len];
+        document.getElementById('queue-line-1').textContent = 'Up next: ' + upNext.title;
+        document.getElementById('queue-line-2').textContent = 'Then: ' + thenNext.title;
+      }
+
+      function loadTrack(autoplay) {
+        const track = playlist[currentIndex];
+        document.getElementById('np-title-text').textContent = track.title;
+        document.querySelector('.np-progress .np-time:not(.end)').textContent = '0:00';
+        document.getElementById('np-duration').textContent = '0:00';
+        document.querySelector('.np-progress .bar .fill').style.width = '0%';
+        renderQueue();
+
+        if (track.preview) {
+          playBtn.disabled = false;
+          audio.src = track.preview;
+          if (autoplay) audio.play().catch(() => {});
+        } else {
+          audio.pause();
+          audio.removeAttribute('src');
+          playBtn.disabled = true;
+          setPlayIcon(false);
+        }
+      }
+
+      loadTrack(false);
+
+      audio.volume = 0.30;
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (currentIndex === 0 && savedTime > 0 && savedTime < audio.duration) {
+          audio.currentTime = savedTime;
+        }
+        if (!savedPaused && playlist[currentIndex].preview) {
+          audio.play().catch(() => {});
+        }
+      });
+
+      playBtn.addEventListener('click', () => {
+        if (!playlist[currentIndex].preview) return;
+        if (audio.paused) {
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+      });
+
+      // seekable progress bar
+      const progressBar = document.getElementById('progress-bar');
+      const progressFill = progressBar.querySelector('.fill');
+      let scrubbing = false;
+
+      function seekFromEvent(clientX) {
+        if (!audio.duration || !isFinite(audio.duration)) return;
+        const rect = progressBar.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        audio.currentTime = ratio * audio.duration;
+        progressFill.style.width = (ratio * 100) + '%';
+      }
+
+      progressBar.addEventListener('pointerdown', (e) => {
+        if (!playlist[currentIndex].preview) return;
+        scrubbing = true;
+        progressBar.classList.add('scrubbing');
+        progressBar.setPointerCapture(e.pointerId);
+        seekFromEvent(e.clientX);
+      });
+
+      progressBar.addEventListener('pointermove', (e) => {
+        if (scrubbing) seekFromEvent(e.clientX);
+      });
+
+      function endScrub() {
+        scrubbing = false;
+        progressBar.classList.remove('scrubbing');
+      }
+
+      progressBar.addEventListener('pointerup', endScrub);
+      progressBar.addEventListener('pointercancel', endScrub);
+
+      prevBtn.addEventListener('click', () => {
+        const wasPlaying = !audio.paused;
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        loadTrack(wasPlaying);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        const wasPlaying = !audio.paused;
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadTrack(wasPlaying);
+      });
+
+      audio.addEventListener('play', () => {
+        setPlayIcon(true);
+        localStorage.setItem('efou_music_paused', '0');
+      });
+
+      audio.addEventListener('pause', () => {
+        setPlayIcon(false);
+        localStorage.setItem('efou_music_paused', '1');
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const d = audio.duration || 0;
+        const c = audio.currentTime || 0;
+        document.querySelector('.np-progress .np-time:not(.end)').textContent = fmtTime(c);
+        if (d) {
+          document.getElementById('np-duration').textContent = fmtTime(d);
+          if (!scrubbing) {
+            document.querySelector('.np-progress .bar .fill').style.width = ((c / d) * 100) + '%';
+          }
+        }
+        if (currentIndex === 0) {
+          localStorage.setItem('efou_music_time', String(c));
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadTrack(true);
+      });
+
+      window.addEventListener('pagehide', () => {
+        if (currentIndex === 0) {
+          localStorage.setItem('efou_music_time', String(audio.currentTime || 0));
+        }
+      });
+
+      // Hide / show the music player
+      const npClose = document.getElementById('np-close');
+      const showBtn = document.getElementById('player-show-btn');
+      const queueBox = document.querySelector('.queue-box');
+      const nowplaying = document.querySelector('.nowplaying');
+
+      function setPlayerHidden(hidden) {
+        nowplaying.classList.toggle('hidden', hidden);
+        queueBox.classList.toggle('hidden', hidden);
+        showBtn.classList.toggle('visible', hidden);
+        localStorage.setItem('efou_player_hidden', hidden ? '1' : '0');
+      }
+
+      if (npClose && showBtn) {
+        npClose.addEventListener('click', () => setPlayerHidden(true));
+        showBtn.addEventListener('click', () => setPlayerHidden(false));
+        setPlayerHidden(localStorage.getItem('efou_player_hidden') === '1');
+      }
+
+      // fade the page in on load
+      requestAnimationFrame(() => {
+        document.body.classList.add('page-enter');
+      });
+
+      // smooth fade transition back to the main page
+      const backBtn = document.getElementById('back-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const href = backBtn.getAttribute('href');
+          if (currentIndex === 0) {
+            localStorage.setItem('efou_music_time', String(audio.currentTime || 0));
+          }
+          document.body.classList.remove('page-enter');
+          setTimeout(() => { window.location.href = href; }, 380);
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      // ======================================================
+      // Fill these in once with your GitHub username and repo
+      // name. The Projects page reads every .json file inside
+      // the "projects-data" folder of this repo automatically —
+      // no other edits needed when you add a new project.
+      // ======================================================
+      const GITHUB_USER = "imefou";
+      const GITHUB_REPO = "imefou.org";
+      const GITHUB_BRANCH = "main";
+
+      const grid = document.getElementById('projects-grid');
+      const tabs = document.querySelectorAll('.category-tab');
+      let allProjects = [];
+      let projects = [];
+      let activeCategory = 'video';
+
+      function showEmpty(message) {
+        grid.innerHTML = '<div class="empty-state">' + message + '</div>';
+      }
+
+      function matchesCategory(p, category) {
+        return (p.category || '').toString().trim().toLowerCase() === category;
+      }
+
+      async function loadProjects() {
+        try {
+          const listUrl = 'https://api.github.com/repos/' + GITHUB_USER + '/' + GITHUB_REPO +
+                           '/contents/projects-data?ref=' + GITHUB_BRANCH;
+          const listRes = await fetch(listUrl);
+          if (!listRes.ok) throw new Error('list fetch failed');
+          const files = await listRes.json();
+          const jsonFiles = files.filter(f => f.type === 'file' && f.name.endsWith('.json'));
+
+          if (jsonFiles.length === 0) {
+            projects = [];
+            renderGrid();
+            return;
+          }
+
+          const fetched = await Promise.all(jsonFiles.map(async (f) => {
+            try {
+              const res = await fetch(f.download_url);
+              const data = await res.json();
+              return data;
+            } catch (e) {
+              return null;
+            }
+          }));
+
+          allProjects = fetched.filter(Boolean);
+          renderGrid();
+        } catch (e) {
+          allProjects = [];
+          showEmpty('Couldn\'t load projects right now.');
+        }
+      }
+
+      function renderGrid() {
+        projects = allProjects.filter(p => matchesCategory(p, activeCategory));
+
+        if (projects.length === 0) {
+          showEmpty('No projects here yet — check back soon.');
+          return;
+        }
+
+        grid.innerHTML = '';
+        projects.forEach((p, i) => {
+          const images = Array.isArray(p.images) ? p.images : [];
+          const card = document.createElement('a');
+          card.href = '#';
+          card.className = 'project-card';
+          card.addEventListener('click', (e) => {
+            e.preventDefault();
+            openLightbox(i);
+          });
+
+          const thumbWrap = document.createElement('div');
+          thumbWrap.className = 'thumb-wrap';
+
+          const img = document.createElement('img');
+          img.className = 'thumb';
+          img.src = images[0] || '';
+          img.alt = p.title || 'Project';
+          thumbWrap.appendChild(img);
+
+          if (images.length > 1) {
+            const badge = document.createElement('span');
+            badge.className = 'count-badge';
+            badge.textContent = images.length + ' photos';
+            thumbWrap.appendChild(badge);
+          }
+
+          const content = document.createElement('div');
+          content.className = 'content';
+          content.innerHTML =
+            '<div class="title"></div><div class="desc"></div>';
+          content.querySelector('.title').textContent = p.title || 'Untitled project';
+          content.querySelector('.desc').textContent = p.description || '';
+
+          card.appendChild(thumbWrap);
+          card.appendChild(content);
+          grid.appendChild(card);
+        });
+      }
+
+      // ---- lightbox ----
+      const lightbox = document.getElementById('lightbox');
+      const lbImg = document.getElementById('lightbox-img');
+      const lbTitle = document.getElementById('lightbox-title');
+      const lbDesc = document.getElementById('lightbox-desc');
+      const lbCount = document.getElementById('lightbox-count');
+      const lbPrev = document.getElementById('lightbox-prev');
+      const lbNext = document.getElementById('lightbox-next');
+      const lbClose = document.getElementById('lightbox-close');
+
+      let currentProject = 0;
+      let currentImage = 0;
+
+      function openLightbox(projectIndex) {
+        currentProject = projectIndex;
+        currentImage = 0;
+        renderLightbox();
+        lightbox.classList.add('open');
+      }
+
+      function renderLightbox() {
+        const p = projects[currentProject];
+        const images = Array.isArray(p.images) ? p.images : [];
+        lbImg.src = images[currentImage] || '';
+        lbTitle.textContent = p.title || '';
+        lbDesc.textContent = p.description || '';
+        lbCount.textContent = (currentImage + 1) + ' / ' + images.length;
+        lbPrev.style.visibility = images.length > 1 ? 'visible' : 'hidden';
+        lbNext.style.visibility = images.length > 1 ? 'visible' : 'hidden';
+      }
+
+      lbPrev.addEventListener('click', () => {
+        const images = projects[currentProject].images || [];
+        currentImage = (currentImage - 1 + images.length) % images.length;
+        renderLightbox();
+      });
+
+      lbNext.addEventListener('click', () => {
+        const images = projects[currentProject].images || [];
+        currentImage = (currentImage + 1) % images.length;
+        renderLightbox();
+      });
+
+      lbClose.addEventListener('click', () => {
+        lightbox.classList.remove('open');
+      });
+
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) lightbox.classList.remove('open');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('open')) return;
+        if (e.key === 'Escape') lightbox.classList.remove('open');
+        if (e.key === 'ArrowLeft') lbPrev.click();
+        if (e.key === 'ArrowRight') lbNext.click();
+      });
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          if (tab.classList.contains('active')) return;
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          activeCategory = tab.dataset.category;
+          renderGrid();
+        });
+      });
+
+      loadProjects();
+    })();
+  </script>
+  <script>
+    (function () {
+      const volBar = document.getElementById('vol-bar');
+      const volFill = document.getElementById('vol-fill');
+      const volBtn = document.getElementById('vol-btn');
+      const audio = document.getElementById('bg-audio');
+
+      let volume = 0.30;
+      let lastVolume = volume;
+
+      function applyVolume(v) {
+        volume = Math.min(1, Math.max(0, v));
+        volFill.style.width = (volume * 100) + '%';
+        audio.volume = volume;
+        volBtn.textContent = volume === 0 ? '○' : (volume < 0.5 ? '◐' : '◕');
+      }
+
+      function setFromEvent(clientX) {
+        const rect = volBar.getBoundingClientRect();
+        const ratio = (clientX - rect.left) / rect.width;
+        applyVolume(ratio);
+      }
+
+      let dragging = false;
+
+      volBar.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        volBar.setPointerCapture(e.pointerId);
+        setFromEvent(e.clientX);
+      });
+
+      volBar.addEventListener('pointermove', (e) => {
+        if (dragging) setFromEvent(e.clientX);
+      });
+
+      volBar.addEventListener('pointerup', () => { dragging = false; });
+      volBar.addEventListener('pointercancel', () => { dragging = false; });
+
+      volBtn.addEventListener('click', () => {
+        if (volume > 0) {
+          lastVolume = volume;
+          applyVolume(0);
+        } else {
+          applyVolume(lastVolume || 0.30);
+        }
+      });
+
+      applyVolume(0.30);
+    })();
+  </script>
+</body>
+</html>

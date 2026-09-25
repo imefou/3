@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efou</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060606;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.14);
+    --ink: #F5F5F4;
+    --ink-soft: #9C9C9A;
+    --accent: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+    padding-bottom: 96px;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  body.page-exit {
+    opacity: 0;
+  }
+
+  #logo-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  #logo-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(6px);
+    opacity: 0.55;
+  }
+
+  #logo-bg .dark-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+  }
+
+  .wrap {
+    filter: blur(0px);
+    transition: filter 0.7s ease;
+  }
+
+  body.locked .wrap {
+    filter: blur(18px);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #start-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.35);
+    cursor: pointer;
+    transition: opacity 0.6s ease;
+  }
+
+  body.opened #start-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #start-overlay .start-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    padding: 0.9rem 1.6rem;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    animation: pulseText 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseText {
+    0%, 100% { opacity: 0.75; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.03); }
+  }
+
+  .fade-item {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  body.opened .fade-item {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wrap { transition: none; }
+    #start-overlay { transition: none; }
+    #start-overlay .start-text { animation: none; }
+    .fade-item { transition: none; }
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 4.5rem 1.25rem 3rem;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    margin: 0 auto 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #2A1414, #150909);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.08), 0 0 24px rgba(255,255,255,0.35);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .avatar .dot {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #3DDC84;
+    border: 2px solid var(--bg);
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  h1 .check {
+    color: #4FA9E8;
+    font-size: 1.05rem;
+  }
+
+  .handle {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin: 0 0 1rem;
+  }
+
+  .bio {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    max-width: 32ch;
+    margin: 0 auto 1.75rem;
+  }
+
+  .queue-box {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    bottom: 148px;
+    max-width: calc(100% - 2rem);
+    width: 280px;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    padding: 0.85rem 1.1rem;
+    z-index: 10;
+    text-align: center;
+  }
+
+  .queue-line {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0.3rem 0;
+  }
+
+  .queue-line:first-child {
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .nowplaying {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    bottom: 18px;
+    max-width: calc(100% - 2rem);
+    width: 280px;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: stretch;
+    padding: 1rem 1.1rem;
+    gap: 1rem;
+    z-index: 10;
+  }
+
+  .nowplaying.hidden,
+  .queue-box.hidden {
+    display: none;
+  }
+
+  .np-close {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(13,13,13,0.95);
+    border: 1px solid var(--card-border);
+    color: var(--ink-soft);
+    font-size: 0.62rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .np-close:hover {
+    color: var(--ink);
+  }
+
+  #player-show-btn {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(13,13,13,0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    color: var(--ink);
+    font-size: 1.05rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+  }
+
+  #player-show-btn.visible {
+    display: flex;
+  }
+
+  .np-vol-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .np-vol-vertical .vol-num {
+    font-size: 0.62rem;
+    color: var(--ink-soft);
+  }
+
+  .vol-bar-vertical {
+    width: 4px;
+    height: 72px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.14);
+    position: relative;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .vol-bar-vertical::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: 0;
+    bottom: 0;
+  }
+
+  .vol-bar-vertical .fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60%;
+    background: #fff;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .np-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .np-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .np-title .check {
+    color: #4FA9E8;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .np-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+  }
+
+  .np-controls button {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .np-controls button:hover,
+  .np-controls button:focus-visible {
+    color: var(--ink);
+  }
+
+  .np-controls button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .np-play {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent) !important;
+    color: var(--bg) !important;
+    font-size: 0.75rem;
+  }
+
+  .np-play:disabled {
+    background: var(--card) !important;
+    color: var(--ink-soft) !important;
+  }
+
+  .np-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .np-progress .np-time {
+    font-size: 0.64rem;
+    color: var(--ink-soft);
+    width: 28px;
+    flex-shrink: 0;
+  }
+
+  .np-progress .np-time.end { text-align: right; }
+
+  .np-progress .bar {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.14);
+    position: relative;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .np-progress .bar::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: -10px; bottom: -10px;
+  }
+
+  .np-progress .bar .fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: #fff;
+    border-radius: 2px;
+  }
+
+  .np-progress .bar .fill::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .np-progress .bar:hover .fill::after,
+  .np-progress .bar.scrubbing .fill::after {
+    opacity: 1;
+  }
+
+  @media (max-width: 420px) {
+    .queue-box, .nowplaying { width: calc(100% - 2rem); }
+
+    .queue-box {
+      bottom: 122px;
+      padding: 0.6rem 0.9rem;
+    }
+
+    .queue-line {
+      font-size: 0.7rem;
+      padding: 0.22rem 0;
+    }
+
+    .nowplaying {
+      bottom: 14px;
+      padding: 0.7rem 0.85rem;
+      gap: 0.7rem;
+      border-radius: 18px;
+    }
+
+    .np-vol-vertical {
+      gap: 0.3rem;
+    }
+
+    .np-vol-vertical .vol-num {
+      font-size: 0.56rem;
+    }
+
+    .vol-bar-vertical {
+      height: 52px;
+    }
+
+    .np-body {
+      gap: 0.4rem;
+    }
+
+    .np-title {
+      font-size: 0.78rem;
+    }
+
+    .np-controls {
+      gap: 0.85rem;
+    }
+
+    .np-play {
+      width: 26px;
+      height: 26px;
+      font-size: 0.62rem;
+    }
+
+    .np-progress {
+      gap: 0.35rem;
+    }
+
+    .np-progress .np-time {
+      font-size: 0.58rem;
+      width: 24px;
+    }
+
+    .np-close {
+      width: 19px;
+      height: 19px;
+      font-size: 0.56rem;
+    }
+
+    #player-show-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 0.9rem;
+      right: 14px;
+      bottom: 14px;
+    }
+  }
+
+  .arrows {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+    color: var(--ink-soft);
+    font-size: 1rem;
+  }
+
+  .arrows span {
+    display: inline-block;
+    animation: bounceDown 1.3s ease-in-out infinite;
+  }
+
+  .arrows span:nth-child(2) { animation-delay: 0.12s; }
+  .arrows span:nth-child(3) { animation-delay: 0.24s; }
+
+  @keyframes bounceDown {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(6px); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .arrows span { animation: none; }
+  }
+
+  .links a.highlight {
+    border-color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .links a.highlight .icon {
+    background: rgba(255,255,255,0.22);
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .links a {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    text-decoration: none;
+    color: var(--ink);
+    text-align: left;
+    transition: background 0.15s ease, border-color 0.15s ease,
+                transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .links a:hover,
+  .links a:focus-visible {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.45);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 24px rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .links a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+
+  .icon img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .link-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .link-title {
+    font-weight: 600;
+    font-size: 0.94rem;
+  }
+
+  .link-sub {
+    display: none;
+  }
+
+  .chevron {
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.6rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .pill strong {
+    color: var(--ink);
+  }
+
+  .pill:hover,
+  .pill:focus-visible {
+    border-color: rgba(255,255,255,0.45);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 20px rgba(255,255,255,0.12);
+  }
+
+  footer {
+    margin-top: 2.5rem;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    opacity: 0.7;
+  }
+
+  .music-credit {
+    margin-top: 0.4rem;
+    color: var(--ink-soft);
+    font-size: 0.68rem;
+    opacity: 0.45;
+  }
+
+  #whoami-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0,0,0,0.6);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  #whoami-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .whoami-card {
+    position: relative;
+    max-width: 340px;
+    width: 100%;
+    background: rgba(18,18,18,0.95);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.75rem 1.5rem;
+    text-align: left;
+    transform: translateY(10px);
+    transition: transform 0.3s ease;
+  }
+
+  #whoami-overlay.open .whoami-card {
+    transform: translateY(0);
+  }
+
+  .whoami-card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+  }
+
+  .whoami-card p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .whoami-close {
+    position: absolute;
+    top: 0.9rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem;
+  }
+
+  .whoami-close:hover {
+    color: var(--ink);
+  }
+
+  @media (max-width: 420px) {
+    .wrap { padding-top: 3rem; }
+
+    .links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .links a.highlight {
+      grid-column: 1 / -1;
+    }
+
+    .links a {
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      gap: 0.4rem;
+      padding: 0.9rem 0.5rem;
+    }
+
+    .links a .chevron {
+      display: none;
+    }
+
+    .links a .icon {
+      width: 38px;
+      height: 38px;
+      font-size: 1.15rem;
+    }
+
+    .links a .link-title {
+      font-size: 0.82rem;
+    }
+  }
+</style>
+</head>
+<body class="locked">
+  <script>
+    if (localStorage.getItem('efou_unlocked') === '1') {
+      document.body.classList.remove('locked');
+      document.body.classList.add('opened');
+    }
+  </script>
+  <div id="start-overlay">
+    <div class="start-text">Click to open</div>
+  </div>
+  <div id="logo-bg" aria-hidden="true">
+    <img src="img/logo-bg.gif" alt="">
+    <div class="dark-overlay"></div>
+  </div>
+  <div class="wrap">
+    <div class="avatar">
+      <img src="img/avatar.jpg" alt="Efou">
+      <span class="dot"></span>
+    </div>
+
+    <h1>Efou <span class="check">✓</span></h1>
+    <p class="handle">@imefou</p>
+    <p class="bio">Hi, I'm Efou! I edit videos and post my editing practice on TikTok.</p>
+
+    <div class="arrows" aria-hidden="true">
+      <span>↓</span><span>↓</span><span>↓</span>
+    </div>
+
+    <div class="links">
+      <a href="https://tiktok.com/@imefou" target="_blank" rel="noopener" class="highlight fade-item" style="transition-delay:0.05s">
+        <span class="icon"><img src="img/icons/tiktok.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">TikTok</div>
+          <div class="link-sub">@imefou</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+      <a href="https://discord.gg/efou" target="_blank" rel="noopener" class="fade-item" style="transition-delay:0.12s">
+        <span class="icon"><img src="img/icons/discord.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">Discord</div>
+          <div class="link-sub">discord.gg/efou</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+      <a href="https://discord.gg/JjWVA4GHZ" target="_blank" rel="noopener" class="fade-item" style="transition-delay:0.19s">
+        <span class="icon"><img src="img/icons/commissions.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">Commissions</div>
+          <div class="link-sub">discord.gg/JjWVA4GHZ</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+      <a href="https://revolut.me/imefou" target="_blank" rel="noopener" class="fade-item" style="transition-delay:0.26s">
+        <span class="icon"><img src="img/icons/revolut.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">Revolut</div>
+          <div class="link-sub">revolut.me/imefou</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+      <a href="#" id="whoami-link" class="fade-item" style="transition-delay:0.33s">
+        <span class="icon"><img src="img/icons/info.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">More about me</div>
+          <div class="link-sub">A bit about me</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+      <a href="projects.html" id="projects-link" class="fade-item" style="transition-delay:0.4s">
+        <span class="icon"><img src="img/icons/folder.png" alt=""></span>
+        <span class="link-text">
+          <div class="link-title">Projects</div>
+          <div class="link-sub">See what I've made</div>
+        </span>
+        <span class="chevron">›</span>
+      </a>
+    </div>
+
+    <a class="pill fade-item" href="mailto:imefouTT@gmail.com" style="transition-delay:0.4s">→ Contact me · <strong>imefouTT@gmail.com</strong></a>
+
+    <footer>Efou © 2026</footer>
+  </div>
+
+  <div class="queue-box fade-item" style="transition-delay:0.45s">
+    <div class="queue-line" id="queue-line-1">Up next: —</div>
+    <div class="queue-line" id="queue-line-2">Then: —</div>
+  </div>
+
+  <div class="nowplaying fade-item" style="transition-delay:0.5s">
+    <button class="np-close" id="np-close" aria-label="Hide player">✕</button>
+    <div class="np-vol-vertical">
+      <span class="vol-num">100</span>
+      <div class="vol-bar-vertical" id="vol-bar">
+        <div class="fill" id="vol-fill"></div>
+      </div>
+      <span class="vol-num">0</span>
+    </div>
+
+    <div class="np-body">
+      <div class="np-title"><span id="np-title-text">Track Name</span> <span class="check">✓</span></div>
+
+      <div class="np-controls">
+        <button aria-label="Previous" id="np-prev">◀◀</button>
+        <button class="np-play" aria-label="Play">▶</button>
+        <button aria-label="Next" id="np-next">▶▶</button>
+      </div>
+
+      <div class="np-progress">
+        <span class="np-time">0:00</span>
+        <div class="bar" id="progress-bar"><div class="fill" style="width:0%"></div></div>
+        <span class="np-time end" id="np-duration">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <button id="player-show-btn" aria-label="Show player">♫</button>
+
+  <div id="whoami-overlay">
+    <div class="whoami-card">
+      <button class="whoami-close" id="whoami-close" aria-label="Close">✕</button>
+      <h2>Who I am</h2>
+      <p>Hi, I'm Efou! I'm 16 years old and started video editing around 5/14/2026. I use DaVinci Resolve Studio and currently specialize in montage editing. I have a TikTok page under the username @imefou that I try to post to as often as possible. My niche is Minecraft PvP content, and my montages there are a way for me to practice my editing!</p>
+    </div>
+  </div>
+
+  <audio id="bg-audio" preload="none"></audio>
+  <script>
+    (function () {
+      const playlist = [
+        {
+          title: "Kneejerk Reflex",
+          artist: "Efou",
+          preview: "audio/track2.mp3"
+        },
+        {
+          title: "Shattered Glasshouse",
+          artist: "Efou",
+          preview: "audio/track3.mp3"
+        },
+        {
+          title: "Static Bloodrush",
+          artist: "Efou",
+          preview: "audio/track4.mp3"
+        }
+      ];
+
+      let currentIndex = 0;
+      const audio = document.getElementById('bg-audio');
+      const playBtn = document.querySelector('.np-play');
+      const prevBtn = document.getElementById('np-prev');
+      const nextBtn = document.getElementById('np-next');
+      const savedTime = parseFloat(localStorage.getItem('efou_music_time') || '0') || 0;
+      const savedPaused = localStorage.getItem('efou_music_paused') === '1';
+      const alreadyUnlocked = localStorage.getItem('efou_unlocked') === '1';
+
+      function fmtTime(sec) {
+        if (!isFinite(sec) || sec < 0) sec = 0;
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+      }
+
+      function setPlayIcon(isPlaying) {
+        playBtn.textContent = isPlaying ? '❚❚' : '▶';
+      }
+
+      function renderQueue() {
+        const len = playlist.length;
+        const upNext = playlist[(currentIndex + 1) % len];
+        const thenNext = playlist[(currentIndex + 2) % len];
+        document.getElementById('queue-line-1').textContent = 'Up next: ' + upNext.title;
+        document.getElementById('queue-line-2').textContent = 'Then: ' + thenNext.title;
+      }
+
+      function loadTrack(autoplay) {
+        const track = playlist[currentIndex];
+        document.getElementById('np-title-text').textContent = track.title;
+        document.querySelector('.np-progress .np-time:not(.end)').textContent = '0:00';
+        document.getElementById('np-duration').textContent = '0:00';
+        document.querySelector('.np-progress .bar .fill').style.width = '0%';
+        renderQueue();
+
+        if (track.preview) {
+          playBtn.disabled = false;
+          audio.src = track.preview;
+          if (autoplay) audio.play().catch(() => {});
+        } else {
+          audio.pause();
+          audio.removeAttribute('src');
+          playBtn.disabled = true;
+          setPlayIcon(false);
+        }
+      }
+
+      loadTrack(false);
+
+      audio.volume = 0.30;
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (currentIndex === 0 && savedTime > 0 && savedTime < audio.duration) {
+          audio.currentTime = savedTime;
+        }
+        if (alreadyUnlocked && !savedPaused && playlist[currentIndex].preview) {
+          audio.play().catch(() => {});
+        }
+      });
+
+      playBtn.addEventListener('click', () => {
+        if (!playlist[currentIndex].preview) return;
+        if (audio.paused) {
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+      });
+
+      // seekable progress bar
+      const progressBar = document.getElementById('progress-bar');
+      const progressFill = progressBar.querySelector('.fill');
+      let scrubbing = false;
+
+      function seekFromEvent(clientX) {
+        if (!audio.duration || !isFinite(audio.duration)) return;
+        const rect = progressBar.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        audio.currentTime = ratio * audio.duration;
+        progressFill.style.width = (ratio * 100) + '%';
+      }
+
+      progressBar.addEventListener('pointerdown', (e) => {
+        if (!playlist[currentIndex].preview) return;
+        scrubbing = true;
+        progressBar.classList.add('scrubbing');
+        progressBar.setPointerCapture(e.pointerId);
+        seekFromEvent(e.clientX);
+      });
+
+      progressBar.addEventListener('pointermove', (e) => {
+        if (scrubbing) seekFromEvent(e.clientX);
+      });
+
+      function endScrub() {
+        scrubbing = false;
+        progressBar.classList.remove('scrubbing');
+      }
+
+      progressBar.addEventListener('pointerup', endScrub);
+      progressBar.addEventListener('pointercancel', endScrub);
+
+      prevBtn.addEventListener('click', () => {
+        const wasPlaying = !audio.paused;
+        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        loadTrack(wasPlaying);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        const wasPlaying = !audio.paused;
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadTrack(wasPlaying);
+      });
+
+      audio.addEventListener('play', () => {
+        setPlayIcon(true);
+        localStorage.setItem('efou_music_paused', '0');
+      });
+
+      audio.addEventListener('pause', () => {
+        setPlayIcon(false);
+        localStorage.setItem('efou_music_paused', '1');
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const d = audio.duration || 0;
+        const c = audio.currentTime || 0;
+        document.querySelector('.np-progress .np-time:not(.end)').textContent = fmtTime(c);
+        if (d) {
+          document.getElementById('np-duration').textContent = fmtTime(d);
+          if (!scrubbing) {
+            document.querySelector('.np-progress .bar .fill').style.width = ((c / d) * 100) + '%';
+          }
+        }
+        if (currentIndex === 0) {
+          localStorage.setItem('efou_music_time', String(c));
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        currentIndex = (currentIndex + 1) % playlist.length;
+        loadTrack(true);
+      });
+
+      window.addEventListener('pagehide', () => {
+        if (currentIndex === 0) {
+          localStorage.setItem('efou_music_time', String(audio.currentTime || 0));
+        }
+      });
+
+      // click-to-open overlay (only needed on first visit)
+      const overlay = document.getElementById('start-overlay');
+      if (alreadyUnlocked) {
+        overlay.style.display = 'none';
+      } else {
+        overlay.addEventListener('click', () => {
+          document.body.classList.remove('locked');
+          document.body.classList.add('opened');
+          localStorage.setItem('efou_unlocked', '1');
+          audio.volume = 0.30;
+          if (playlist[currentIndex].preview) audio.play().catch(() => {});
+        }, { once: true });
+      }
+
+      // "Who I am" modal
+      const whoamiLink = document.getElementById('whoami-link');
+      const whoamiOverlay = document.getElementById('whoami-overlay');
+      const whoamiClose = document.getElementById('whoami-close');
+      if (whoamiLink && whoamiOverlay) {
+        whoamiLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          whoamiOverlay.classList.add('open');
+        });
+        whoamiClose.addEventListener('click', () => {
+          whoamiOverlay.classList.remove('open');
+        });
+        whoamiOverlay.addEventListener('click', (e) => {
+          if (e.target === whoamiOverlay) whoamiOverlay.classList.remove('open');
+        });
+      }
+
+      // Hide / show the music player
+      const npClose = document.getElementById('np-close');
+      const showBtn = document.getElementById('player-show-btn');
+      const queueBox = document.querySelector('.queue-box');
+      const nowplaying = document.querySelector('.nowplaying');
+
+      function setPlayerHidden(hidden) {
+        nowplaying.classList.toggle('hidden', hidden);
+        queueBox.classList.toggle('hidden', hidden);
+        showBtn.classList.toggle('visible', hidden);
+        localStorage.setItem('efou_player_hidden', hidden ? '1' : '0');
+      }
+
+      if (npClose && showBtn) {
+        npClose.addEventListener('click', () => setPlayerHidden(true));
+        showBtn.addEventListener('click', () => setPlayerHidden(false));
+        setPlayerHidden(localStorage.getItem('efou_player_hidden') === '1');
+      }
+
+      // smooth fade transition to the Projects page
+      const projectsLink = document.getElementById('projects-link');
+      if (projectsLink) {
+        projectsLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          const href = projectsLink.getAttribute('href');
+          if (currentIndex === 0) {
+            localStorage.setItem('efou_music_time', String(audio.currentTime || 0));
+          }
+          document.body.classList.add('page-exit');
+          setTimeout(() => { window.location.href = href; }, 380);
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      const volBar = document.getElementById('vol-bar');
+      const volFill = document.getElementById('vol-fill');
+      const audio = document.getElementById('bg-audio');
+
+      let volume = 0.30;
+
+      function applyVolume(v) {
+        volume = Math.min(1, Math.max(0, v));
+        volFill.style.height = (volume * 100) + '%';
+        audio.volume = volume;
+      }
+
+      function setFromEvent(clientY) {
+        const rect = volBar.getBoundingClientRect();
+        const ratio = 1 - (clientY - rect.top) / rect.height;
+        applyVolume(ratio);
+      }
+
+      let dragging = false;
+
+      volBar.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        volBar.setPointerCapture(e.pointerId);
+        setFromEvent(e.clientY);
+      });
+
+      volBar.addEventListener('pointermove', (e) => {
+        if (dragging) setFromEvent(e.clientY);
+      });
+
+      volBar.addEventListener('pointerup', () => { dragging = false; });
+      volBar.addEventListener('pointercancel', () => { dragging = false; });
+
+      applyVolume(volume);
+    })();
+  </script>
+</body>
+</html>
